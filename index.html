@@ -1,17 +1,95 @@
-const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <title>Hearing Test MVP</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f7f6; }
+        .controls { border: 1px solid #ccc; padding: 20px; border-radius: 10px; background: white; display: inline-block; }
+        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
+        .playing { background-color: #ffcccc; }
+    </style>
+</head>
+<body>
 
-function playTone(frequency, volume, duration) {
-    const oscillator = audioCtx.createOscillator();
-    const gainNode = audioCtx.createGain();
-
-    oscillator.type = 'sine'; // 聴力検査は純音（サイン波）
-    oscillator.frequency.setValueAtTime(frequency, audioCtx.currentTime);
+    <h2>聴力検査 MVPモジュール</h2>
     
-    gainNode.gain.setValueAtTime(volume, audioCtx.currentTime);
-    
-    oscillator.connect(gainNode);
-    gainNode.connect(audioCtx.destination);
+    <div class="controls">
+        <p>周波数: <span id="freq-val">1000</span> Hz</p>
+        <input type="range" id="frequency" min="250" max="8000" step="250" value="1000">
+        
+        <p>定位 (パンニング): <span id="pan-val">中央</span></p>
+        <button onclick="setPan(-1)">左のみ</button>
+        <button onclick="setPan(0)">中央</button>
+        <button onclick="setPan(1)">右のみ</button>
+        
+        <br><br>
+        <button id="play-btn" style="background: #4CAF50; color: white; font-weight: bold;">音を鳴らす (Start)</button>
+        <button id="stop-btn">止める (Stop)</button>
+    </div>
 
-    oscillator.start();
-    oscillator.stop(audioCtx.currentTime + duration);
-}
+    <script>
+        let audioCtx = null;
+        let oscillator = null;
+        let gainNode = null;
+        let pannerNode = null;
+
+        const freqSlider = document.getElementById('frequency');
+        const freqDisp = document.getElementById('freq-val');
+        const playBtn = document.getElementById('play-btn');
+        const stopBtn = document.getElementById('stop-btn');
+
+        // 周波数スライダーの更新
+        freqSlider.oninput = function() {
+            freqDisp.textContent = this.value;
+            if (oscillator) {
+                oscillator.frequency.setValueAtTime(this.value, audioCtx.currentTime);
+            }
+        };
+
+        function initAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+        }
+
+        function setPan(value) {
+            if (pannerNode) {
+                pannerNode.pan.setValueAtTime(value, audioCtx.currentTime);
+                document.getElementById('pan-val').textContent = value === -1 ? "左" : value === 1 ? "右" : "中央";
+            }
+        }
+
+        playBtn.onclick = function() {
+            initAudio();
+            if (oscillator) return; // 二重再生防止
+
+            oscillator = audioCtx.createOscillator();
+            gainNode = audioCtx.createGain();
+            pannerNode = audioCtx.createStereoPanner();
+
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(freqSlider.value, audioCtx.currentTime);
+            
+            // 安全のため音量は控えめ(0.1)に設定
+            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+
+            oscillator.connect(gainNode);
+            gainNode.connect(pannerNode);
+            pannerNode.connect(audioCtx.destination);
+
+            oscillator.start();
+            playBtn.classList.add('playing');
+        };
+
+        stopBtn.onclick = function() {
+            if (oscillator) {
+                oscillator.stop();
+                oscillator.disconnect();
+                oscillator = null;
+                playBtn.classList.remove('playing');
+            }
+        };
+    </script>
+</body>
+</html>
