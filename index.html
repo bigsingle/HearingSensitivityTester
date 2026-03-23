@@ -2,94 +2,196 @@
 <html lang="ja">
 <head>
     <meta charset="UTF-8">
-    <title>Hearing Test MVP</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hearing Sensitivity Test</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 50px; background: #f4f7f6; }
-        .controls { border: 1px solid #ccc; padding: 20px; border-radius: 10px; background: white; display: inline-block; }
-        button { padding: 10px 20px; font-size: 16px; cursor: pointer; margin: 5px; }
-        .playing { background-color: #ffcccc; }
+        body { font-family: 'Helvetica Neue', Arial, sans-serif; text-align: center; background-color: #f0f2f5; color: #333; padding: 20px; }
+        .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
+        
+        /* 周波数操作パネル */
+        .freq-setter { display: flex; justify-content: center; align-items: center; margin-bottom: 30px; gap: 5px; }
+        .digit-col { display: flex; flex-direction: column; align-items: center; }
+        .digit-val { font-size: 2.5rem; font-weight: bold; width: 40px; background: #eee; margin: 5px 0; border-radius: 5px; }
+        .arrow-btn { width: 40px; height: 40px; cursor: pointer; border: none; background: #007AFF; color: white; border-radius: 5px; font-size: 1.2rem; }
+        .arrow-btn:active { background: #0056b3; }
+        .unit { font-size: 1.5rem; margin-left: 10px; align-self: flex-end; padding-bottom: 10px; }
+
+        /* メインアクション */
+        #start-test { padding: 15px 40px; font-size: 1.2rem; cursor: pointer; background: #34C759; color: white; border: none; border-radius: 30px; margin-bottom: 20px; width: 100%; }
+        
+        /* 回答ボタン */
+        .answer-section { margin-top: 20px; display: none; }
+        .answer-btns { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
+        .ans-btn { width: 50px; height: 50px; font-size: 1.2rem; cursor: pointer; border: 2px solid #007AFF; background: white; border-radius: 50%; color: #007AFF; transition: 0.2s; }
+        .ans-btn:hover { background: #007AFF; color: white; }
+
+        /* 判定表示 */
+        #result-display { font-size: 3rem; font-weight: bold; margin-top: 20px; height: 60px; }
     </style>
 </head>
 <body>
 
-    <h2>聴力検査 MVPモジュール</h2>
+<div class="container">
+    <h2>耳の感度測定テスト</h2>
     
-    <div class="controls">
-        <p>周波数: <span id="freq-val">1000</span> Hz</p>
-        <input type="range" id="frequency" min="250" max="8000" step="250" value="1000">
-        
-        <p>定位 (パンニング): <span id="pan-val">中央</span></p>
-        <button onclick="setPan(-1)">左のみ</button>
-        <button onclick="setPan(0)">中央</button>
-        <button onclick="setPan(1)">右のみ</button>
-        
-        <br><br>
-        <button id="play-btn" style="background: #4CAF50; color: white; font-weight: bold;">音を鳴らす (Start)</button>
-        <button id="stop-btn">止める (Stop)</button>
+    <div class="freq-setter" id="freq-controls">
+        </div>
+
+    <button id="start-test">テスト音を再生 (3秒間)</button>
+
+    <div class="answer-section" id="answer-ui">
+        <p>音は何回鳴りましたか？</p>
+        <div class="answer-btns">
+            <button class="ans-btn" onclick="checkAnswer(1)">1</button>
+            <button class="ans-btn" onclick="checkAnswer(2)">2</button>
+            <button class="ans-btn" onclick="checkAnswer(3)">3</button>
+            <button class="ans-btn" onclick="checkAnswer(4)">4</button>
+            <button class="ans-btn" onclick="checkAnswer(5)">5</button>
+        </div>
     </div>
 
-    <script>
-        let audioCtx = null;
-        let oscillator = null;
-        let gainNode = null;
-        let pannerNode = null;
+    <div id="result-display"></div>
+</div>
 
-        const freqSlider = document.getElementById('frequency');
-        const freqDisp = document.getElementById('freq-val');
-        const playBtn = document.getElementById('play-btn');
-        const stopBtn = document.getElementById('stop-btn');
+<script>
+    let audioCtx = null;
+    let currentTargetCount = 0;
+    let digits =; // 初期値 01000 Hz
 
-        // 周波数スライダーの更新
-        freqSlider.oninput = function() {
-            freqDisp.textContent = this.value;
-            if (oscillator) {
-                oscillator.frequency.setValueAtTime(this.value, audioCtx.currentTime);
-            }
-        };
+    // UI初期化: 5桁のボタン作成
+    const freqControls = document.getElementById('freq-controls');
+    function renderDigits() {
+        freqControls.innerHTML = '';
+        digits.forEach((val, idx) => {
+            const col = document.createElement('div');
+            col.className = 'digit-col';
+            col.innerHTML = `
+                <button class="arrow-btn" onclick="changeDigit(${idx}, 1)">▲</button>
+                <div class="digit-val">${val}</div>
+                <button class="arrow-btn" onclick="changeDigit(${idx}, -1)">▼</button>
+            `;
+            freqControls.appendChild(col);
+        });
+        const unit = document.createElement('div');
+        unit.className = 'unit';
+        unit.textContent = 'Hz';
+        freqControls.appendChild(unit);
+    }
 
-        function initAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
+    function changeDigit(idx, delta) {
+        digits[idx] = (digits[idx] + delta + 10) % 10;
+        renderDigits();
+    }
+
+    function getFrequency() {
+        return parseInt(digits.join(''), 10);
+    }
+
+    function initAudio() {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    }
+
+    // 聴力テスト音の再生
+    document.getElementById('start-test').onclick = function() {
+        initAudio();
+        const freq = getFrequency();
+        if (freq < 20 || freq > 22000) {
+            alert("周波数は 20Hz 〜 22000Hz の範囲で設定してください。");
+            return;
         }
 
-        function setPan(value) {
-            if (pannerNode) {
-                pannerNode.pan.setValueAtTime(value, audioCtx.currentTime);
-                document.getElementById('pan-val').textContent = value === -1 ? "左" : value === 1 ? "右" : "中央";
-            }
+        // 回数設定 (1〜5回)
+        currentTargetCount = Math.floor(Math.random() * 5) + 1;
+        document.getElementById('answer-ui').style.display = 'none';
+        document.getElementById('result-display').textContent = '';
+        this.disabled = true;
+
+        const startTime = audioCtx.currentTime + 0.1;
+        const duration = 0.2;
+        const interval = 0.6; // 3秒 / 5回 = 0.6s間隔で等間隔
+
+        for (let i = 0; i < currentTargetCount; i++) {
+            playTone(freq, startTime + (i * interval), duration);
         }
 
-        playBtn.onclick = function() {
-            initAudio();
-            if (oscillator) return; // 二重再生防止
+        // 3秒後に回答UIを表示
+        setTimeout(() => {
+            document.getElementById('answer-ui').style.display = 'block';
+            document.getElementById('start-test').disabled = false;
+        }, 3000);
+    };
 
-            oscillator = audioCtx.createOscillator();
-            gainNode = audioCtx.createGain();
-            pannerNode = audioCtx.createStereoPanner();
+    function playTone(freq, start, dur) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
 
-            oscillator.type = 'sine';
-            oscillator.frequency.setValueAtTime(freqSlider.value, audioCtx.currentTime);
-            
-            // 安全のため音量は控えめ(0.1)に設定
-            gainNode.gain.setValueAtTime(0.1, audioCtx.currentTime);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(freq, start);
 
-            oscillator.connect(gainNode);
-            gainNode.connect(pannerNode);
-            pannerNode.connect(audioCtx.destination);
+        // エンベロープ（クリックノイズ防止）
+        const fade = 0.005; 
+        gain.gain.setValueAtTime(0, start);
+        gain.gain.linearRampToValueAtTime(0.2, start + fade); // 音量は0.2に制限
+        gain.gain.setValueAtTime(0.2, start + dur - fade);
+        gain.gain.linearRampToValueAtTime(0, start + dur);
 
-            oscillator.start();
-            playBtn.classList.add('playing');
-        };
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(start);
+        osc.stop(start + dur);
+    }
 
-        stopBtn.onclick = function() {
-            if (oscillator) {
-                oscillator.stop();
-                oscillator.disconnect();
-                oscillator = null;
-                playBtn.classList.remove('playing');
-            }
-        };
-    </script>
+    // 回答チェック
+    function checkAnswer(userChoice) {
+        const display = document.getElementById('result-display');
+        if (userChoice === currentTargetCount) {
+            display.textContent = '○';
+            display.style.color = '#34C759';
+            playFeedback(true);
+        } else {
+            display.textContent = '×';
+            display.style.color = '#FF3B30';
+            playFeedback(false);
+        }
+        document.getElementById('answer-ui').style.display = 'none';
+    }
+
+    // 効果音合成 (ピンポン / ブブー)
+    function playFeedback(isCorrect) {
+        const now = audioCtx.currentTime;
+        if (isCorrect) {
+            // ピンポン (ミ -> ド)
+            playSimpleTone(659.25, now, 0.1);
+            playSimpleTone(880.00, now + 0.1, 0.3);
+        } else {
+            // ブブー (低いノコギリ波)
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, now);
+            gain.gain.setValueAtTime(0.1, now);
+            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.start();
+            osc.stop(now + 0.5);
+        }
+    }
+
+    function playSimpleTone(freq, start, dur) {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.frequency.setValueAtTime(freq, start);
+        gain.gain.setValueAtTime(0.1, start);
+        gain.gain.exponentialRampToValueAtTime(0.01, start + dur);
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+        osc.start(start);
+        osc.stop(start + dur);
+    }
+
+    renderDigits();
+</script>
+
 </body>
 </html>
