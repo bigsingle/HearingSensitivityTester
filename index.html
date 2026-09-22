@@ -67,26 +67,21 @@
             margin-bottom: 8px;
         }
 
-        /* 画面中央のメイン表示：現在の周波数 */
+        /* メイン表示：白色背景・太字フォント・黒文字 */
         .main-freq-box {
             text-align: center;
             padding: 20px 10px;
-            background-color: #0f172a;
+            background-color: #ffffff;
+            border: 1px solid var(--border-color);
             border-radius: 12px;
-            color: #ffffff;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-        }
-
-        .main-freq-title {
-            font-size: 1.1rem;
-            color: #94a3b8;
-            margin-bottom: 4px;
+            color: #000000;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
         }
 
         .main-freq-value {
             font-size: 3.5rem;
             font-weight: 800;
-            color: #38bdf8; /* 視認性の高い明るいシアン色 */
+            color: #000000;
             letter-spacing: 1px;
             font-variant-numeric: tabular-nums;
         }
@@ -163,7 +158,7 @@
             border-color: var(--primary-color);
         }
 
-        /* チェックセクション */
+        /* 回数選択ボタン */
         .count-buttons {
             display: grid;
             grid-template-columns: repeat(3, 1fr);
@@ -252,6 +247,15 @@
             font-size: 0.95rem;
             border: 1px solid var(--border-color);
         }
+
+        /* フッタークレジット表記 */
+        footer {
+            text-align: center;
+            font-size: 0.85rem;
+            color: #64748b;
+            margin-top: 20px;
+            padding-top: 12px;
+        }
     </style>
 </head>
 <body>
@@ -261,9 +265,8 @@
 </header>
 
 <div class="container">
-    <!-- 画面中央：現在の周波数 (大きめのフォント・ハイコントラスト) -->
+    <!-- メイン表示（白色背景・太字・黒色文字） -->
     <div class="main-freq-box">
-        <div class="main-freq-title">現在の周波数</div>
         <div class="main-freq-value" id="currentFreqText">100 Hz</div>
     </div>
 
@@ -288,16 +291,14 @@
         </div>
     </div>
 
-    <!-- 可聴チェック -->
+    <!-- チェックセクション（ラベル削除済み） -->
     <div class="card">
-        <div class="card-title">可聴チェック</div>
         <button class="btn-primary" id="startBtn" onclick="startTest()">チェック開始</button>
         
         <!-- 結果メッセージ表示領域 -->
         <div id="feedbackArea" class="feedback-area"></div>
 
         <div style="margin-top: 12px;">
-            <div class="card-title">音の鳴った回数を選択</div>
             <div class="count-buttons">
                 <button onclick="answer(1)">1回</button>
                 <button onclick="answer(2)">2回</button>
@@ -309,7 +310,7 @@
         </div>
     </div>
 
-    <!-- 画面下部：最高可聴周波数 / 正答率 / 初めからやり直す (同じサイズ) -->
+    <!-- 画面下部：最高可聴周波数 / 正答率 / 初めからやり直す -->
     <div class="bottom-display">
         <div class="bottom-card">
             <div class="card-title" style="margin:0;">最高可聴周波数</div>
@@ -323,6 +324,11 @@
             <button class="btn-reset" onclick="resetAll()">初めからやり直す</button>
         </div>
     </div>
+
+    <!-- 最下部クレジット表記 -->
+    <footer>
+        Special thanks to キコろぐさん・可聴周波数域チェッカ for the inspiration.
+    </footer>
 </div>
 
 <script>
@@ -335,7 +341,7 @@
     let correctTests = 0;
     let maxAudibleFreq = 0;
 
-    // プリセットボタン生成 (単位はHzに統一)
+    // プリセットボタン生成 (単位: Hz)
     function initPresets() {
         const container = document.getElementById('presetButtons');
         container.innerHTML = '';
@@ -400,7 +406,6 @@
             osc.type = 'sine';
             osc.frequency.setValueAtTime(currentFreq, audioCtx.currentTime);
 
-            // フェードイン・フェードアウト
             gain.gain.setValueAtTime(0, audioCtx.currentTime);
             gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.02);
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime + duration - 0.02);
@@ -415,16 +420,16 @@
         });
     }
 
-    // 正解時の効果音（ピンポン♪）
+    // 正解時の効果音（ソ# -> ミ）
     function playSoundCorrect() {
         initAudio();
         const now = audioCtx.currentTime;
 
-        // 高いミ (E5: ~659Hz) -> 高いソ# (G#5: ~830Hz)
+        // 1音目: 高いソ# (G#5: ~830.61Hz)
         const osc1 = audioCtx.createOscillator();
         const gain1 = audioCtx.createGain();
         osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(659.25, now);
+        osc1.frequency.setValueAtTime(830.61, now);
         gain1.gain.setValueAtTime(0, now);
         gain1.gain.linearRampToValueAtTime(0.15, now + 0.02);
         gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
@@ -434,10 +439,11 @@
         osc1.start(now);
         osc1.stop(now + 0.4);
 
+        // 2音目: 高いミ (E5: ~659.25Hz)
         const osc2 = audioCtx.createOscillator();
         const gain2 = audioCtx.createGain();
         osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(830.61, now + 0.15);
+        osc2.frequency.setValueAtTime(659.25, now + 0.15);
         gain2.gain.setValueAtTime(0, now + 0.15);
         gain2.gain.linearRampToValueAtTime(0.15, now + 0.17);
         gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
@@ -453,7 +459,6 @@
         initAudio();
         const now = audioCtx.currentTime;
 
-        // 2回の低い鋸歯状波
         for (let i = 0; i < 2; i++) {
             const start = now + (i * 0.18);
             const osc = audioCtx.createOscillator();
@@ -493,12 +498,10 @@
         startBtn.innerText = '再生中...';
         startBtn.disabled = true;
 
-        // 1〜5回のランダムな回数
         actualBeepCount = Math.floor(Math.random() * 5) + 1;
 
         for (let i = 0; i < actualBeepCount; i++) {
             await playBeep(0.15);
-            // 200msの間隔を確保
             await new Promise(r => setTimeout(r, 200));
         }
 
