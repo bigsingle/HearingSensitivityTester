@@ -389,8 +389,8 @@
         setFreq(currentFreq + delta);
     }
 
-    // テスト用のビープ音生成（1回150ms）
-    function playBeep(duration = 0.15) {
+    // 単一ビープ音再生
+    function playBeep(duration = 0.12) {
         return new Promise((resolve) => {
             const osc = audioCtx.createOscillator();
             const gain = audioCtx.createGain();
@@ -438,7 +438,7 @@
         osc2.frequency.setValueAtTime(1318.51, now + 0.15);
         gain2.gain.setValueAtTime(0, now + 0.15);
         gain2.gain.linearRampToValueAtTime(0.15, now + 0.17);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65); // 0.15s + 0.50s
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65);
 
         osc2.connect(gain2);
         gain2.connect(audioCtx.destination);
@@ -467,7 +467,7 @@
         osc1.start(now);
         osc1.stop(now + 0.15);
 
-        // 2回目: 500ms (0.18s 後から開始)
+        // 2回目: 500ms
         const start2 = now + 0.18;
         const osc2 = audioCtx.createOscillator();
         const gain2 = audioCtx.createGain();
@@ -485,7 +485,7 @@
         osc2.stop(start2 + 0.50);
     }
 
-    // チェック開始
+    // チェック開始 (2.0秒固定)
     async function startTest() {
         initAudio();
         if (audioCtx.state === 'suspended') {
@@ -505,10 +505,30 @@
 
         actualBeepCount = Math.floor(Math.random() * 5) + 1;
 
+        const totalDuration = 2000; // 全体時間を2.0秒(2000ms)に固定
+        const startTime = Date.now();
+
+        // 各回のビープ音長さを120msとし、間隔を計算
+        const beepDuration = 0.12; 
+        const beepDurationMs = 120;
+        
+        // 音と音の間の無音時間（均等配置）
+        const intervalMs = actualBeepCount > 1 
+            ? (1600 - (actualBeepCount * beepDurationMs)) / (actualBeepCount - 1) 
+            : 0;
+
+        // 再生処理
         for (let i = 0; i < actualBeepCount; i++) {
-            await playBeep(0.15);
-            await new Promise(r => setTimeout(r, 200));
+            await playBeep(beepDuration);
+            if (i < actualBeepCount - 1 && intervalMs > 0) {
+                await new Promise(r => setTimeout(r, intervalMs));
+            }
         }
+
+        // 残り時間を計算し、きっちり2.0秒経過するまで待機
+        const elapsedTime = Date.now() - startTime;
+        const remainingTime = Math.max(0, totalDuration - elapsedTime);
+        await new Promise(r => setTimeout(r, remainingTime));
 
         startBtn.innerText = '回数を選んでください';
     }
