@@ -3,17 +3,17 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>可聴周波数域チェッカ</title>
+    <title>可聴周波数域チェッカー</title>
     <style>
         :root {
             --primary-color: #2563eb;
             --primary-hover: #1d4ed8;
             --bg-color: #f8fafc;
             --card-bg: #ffffff;
-            --text-color: #1e293b;
-            --border-color: #e2e8f0;
-            --correct-color: #16a34a;
-            --incorrect-color: #dc2626;
+            --text-color: #0f172a;
+            --border-color: #cbd5e1;
+            --correct-color: #15803d;
+            --incorrect-color: #b91c1c;
         }
 
         * {
@@ -34,7 +34,7 @@
 
         header {
             text-align: center;
-            margin-bottom: 16px;
+            margin-bottom: 12px;
         }
 
         h1 {
@@ -43,7 +43,7 @@
         }
 
         .container {
-            max-width: 1200px;
+            max-width: 1000px;
             width: 100%;
             margin: 0 auto;
             display: flex;
@@ -61,33 +61,37 @@
         }
 
         .card-title {
-            font-size: 1rem;
+            font-size: 0.95rem;
             font-weight: bold;
             color: #64748b;
             margin-bottom: 8px;
         }
 
-        /* 上段表示 */
-        .top-display {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-            gap: 16px;
-        }
-
-        .stat-box {
+        /* 画面中央のメイン表示：現在の周波数 */
+        .main-freq-box {
             text-align: center;
-            padding: 12px;
-            background-color: #f1f5f9;
-            border-radius: 8px;
+            padding: 20px 10px;
+            background-color: #0f172a;
+            border-radius: 12px;
+            color: #ffffff;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
         }
 
-        .stat-value {
-            font-size: 2.2rem;
-            font-weight: bold;
-            color: var(--primary-color);
+        .main-freq-title {
+            font-size: 1.1rem;
+            color: #94a3b8;
+            margin-bottom: 4px;
         }
 
-        /* 周波数プリセット（1000Hz〜20000Hz横並び） */
+        .main-freq-value {
+            font-size: 3.5rem;
+            font-weight: 800;
+            color: #38bdf8; /* 視認性の高い明るいシアン色 */
+            letter-spacing: 1px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        /* 周波数指定ボタン（横スクロール） */
         .preset-container {
             overflow-x: auto;
             white-space: nowrap;
@@ -99,10 +103,10 @@
             gap: 8px;
         }
 
-        /* 手動微調整ボタン */
+        /* 周波数微調整（3列×2行） */
         .manual-buttons {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(80px, 1fr));
+            grid-template-columns: repeat(3, 1fr);
             gap: 8px;
         }
 
@@ -110,7 +114,7 @@
         button {
             font-size: 1rem;
             font-weight: 600;
-            padding: 12px 16px;
+            padding: 12px 8px;
             border: 1px solid var(--border-color);
             border-radius: 8px;
             background-color: #ffffff;
@@ -122,7 +126,7 @@
 
         button:hover:not(:disabled) {
             background-color: #f1f5f9;
-            border-color: #cbd5e1;
+            border-color: #94a3b8;
         }
 
         button:active:not(:disabled) {
@@ -138,7 +142,7 @@
             background-color: var(--primary-color);
             color: white;
             border: none;
-            font-size: 1.2rem;
+            font-size: 1.25rem;
             width: 100%;
             padding: 16px;
         }
@@ -150,7 +154,7 @@
         .preset-btn {
             padding: 10px 14px;
             font-size: 0.95rem;
-            min-width: 90px;
+            min-width: 95px;
         }
 
         .preset-btn.active {
@@ -188,11 +192,11 @@
 
         /* 結果メッセージ表示領域 */
         .feedback-area {
-            min-height: 48px;
+            min-height: 52px;
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.3rem;
+            font-size: 1.4rem;
             font-weight: bold;
             border-radius: 8px;
             margin-top: 12px;
@@ -203,71 +207,88 @@
         .feedback-area.correct {
             background-color: #dcfce7;
             color: var(--correct-color);
+            border: 1px solid #86efac;
         }
 
         .feedback-area.incorrect {
             background-color: #fee2e2;
             color: var(--incorrect-color);
+            border: 1px solid #fca5a5;
         }
 
-        .bottom-actions {
-            display: flex;
-            justify-content: flex-end;
+        /* 画面下部：同じサイズで3つ並べるエリア */
+        .bottom-display {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
             margin-top: auto;
             padding-top: 8px;
         }
 
+        .bottom-card {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .bottom-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: var(--primary-color);
+            margin-top: 4px;
+        }
+
         .btn-reset {
+            width: 100%;
+            height: 100%;
             background-color: #f1f5f9;
-            color: #475569;
+            color: #334155;
+            font-size: 0.95rem;
+            border: 1px solid var(--border-color);
         }
     </style>
 </head>
 <body>
 
 <header>
-    <h1>可聴周波数域チェッカ</h1>
+    <h1>可聴周波数域チェッカー</h1>
 </header>
 
 <div class="container">
-    <!-- 現在のステータス表示 -->
-    <div class="top-display">
-        <div class="card stat-box">
-            <div class="card-title">現在の周波数</div>
-            <div class="stat-value" id="currentFreqText">100 Hz</div>
-        </div>
-        <div class="card stat-box">
-            <div class="card-title">最高可聴周波数</div>
-            <div class="stat-value" id="maxFreqText">--- Hz</div>
-        </div>
-        <div class="card stat-box">
-            <div class="card-title">正答率</div>
-            <div class="stat-value" id="accuracyText">0.0 %</div>
-        </div>
+    <!-- 画面中央：現在の周波数 (大きめのフォント・ハイコントラスト) -->
+    <div class="main-freq-box">
+        <div class="main-freq-title">現在の周波数</div>
+        <div class="main-freq-value" id="currentFreqText">100 Hz</div>
     </div>
 
-    <!-- 周波数指定ボタン（横スクロール可能） -->
+    <!-- 周波数指定 -->
     <div class="card">
-        <div class="card-title">周波数指定 (1000Hz 〜 20000Hz)</div>
+        <div class="card-title">周波数指定</div>
         <div class="preset-container">
             <div class="preset-buttons" id="presetButtons"></div>
         </div>
     </div>
 
-    <!-- 周波数手動設定（微調整） -->
+    <!-- 周波数微調整 -->
     <div class="card">
         <div class="card-title">周波数微調整</div>
         <div class="manual-buttons">
-            <button onclick="changeFreq(1000)">+1kHz</button>
-            <button onclick="changeFreq(100)">+100Hz</button>
             <button onclick="changeFreq(10)">+10Hz</button>
-            <button onclick="changeFreq(-1000)">-1kHz</button>
-            <button onclick="changeFreq(-100)">-100Hz</button>
+            <button onclick="changeFreq(100)">+100Hz</button>
+            <button onclick="changeFreq(1000)">+1000Hz</button>
             <button onclick="changeFreq(-10)">-10Hz</button>
+            <button onclick="changeFreq(-100)">-100Hz</button>
+            <button onclick="changeFreq(-1000)">-1000Hz</button>
         </div>
     </div>
 
-    <!-- テスト実施＆回答セクション -->
+    <!-- 可聴チェック -->
     <div class="card">
         <div class="card-title">可聴チェック</div>
         <button class="btn-primary" id="startBtn" onclick="startTest()">チェック開始</button>
@@ -288,15 +309,25 @@
         </div>
     </div>
 
-    <!-- リセットボタン -->
-    <div class="bottom-actions">
-        <button class="btn-reset" onclick="resetAll()">初めからやり直す</button>
+    <!-- 画面下部：最高可聴周波数 / 正答率 / 初めからやり直す (同じサイズ) -->
+    <div class="bottom-display">
+        <div class="bottom-card">
+            <div class="card-title" style="margin:0;">最高可聴周波数</div>
+            <div class="bottom-value" id="maxFreqText">--- Hz</div>
+        </div>
+        <div class="bottom-card">
+            <div class="card-title" style="margin:0;">正答率</div>
+            <div class="bottom-value" id="accuracyText">0.0 %</div>
+        </div>
+        <div class="bottom-card" style="padding:0; border:none; background:none;">
+            <button class="btn-reset" onclick="resetAll()">初めからやり直す</button>
+        </div>
     </div>
 </div>
 
 <script>
     let audioCtx = null;
-    let currentFreq = 100; // 初期値100Hz
+    let currentFreq = 100;
     let actualBeepCount = 0;
     let isTesting = false;
     
@@ -304,22 +335,23 @@
     let correctTests = 0;
     let maxAudibleFreq = 0;
 
-    // 初期化：プリセットボタンの動的生成 (1000Hz〜20000Hz, 1000Hz刻み)
+    // プリセットボタン生成 (単位はHzに統一)
     function initPresets() {
         const container = document.getElementById('presetButtons');
         container.innerHTML = '';
         
-        // 100Hz指定ボタンも先頭に追加
+        // 100Hzを追加
         const btn100 = document.createElement('button');
         btn100.className = 'preset-btn';
         btn100.innerText = '100Hz';
         btn100.onclick = () => setFreq(100);
         container.appendChild(btn100);
 
+        // 1000Hz〜20000Hzまで1000Hz刻み
         for (let hz = 1000; hz <= 20000; hz += 1000) {
             const btn = document.createElement('button');
             btn.className = 'preset-btn';
-            btn.innerText = `${hz / 1000}kHz`;
+            btn.innerText = `${hz}Hz`;
             btn.onclick = () => setFreq(hz);
             container.appendChild(btn);
         }
@@ -341,9 +373,7 @@
         // プリセットボタンのハイライト更新
         const buttons = document.querySelectorAll('.preset-btn');
         buttons.forEach(btn => {
-            const val = btn.innerText.includes('kHz') 
-                ? parseFloat(btn.innerText) * 1000 
-                : parseInt(btn.innerText);
+            const val = parseInt(btn.innerText.replace('Hz', ''));
             if (val === currentFreq) {
                 btn.classList.add('active');
             } else {
@@ -361,7 +391,7 @@
         setFreq(currentFreq + delta);
     }
 
-    // ビープ音生成
+    // テスト用のビープ音生成（1回150ms）
     function playBeep(duration = 0.15) {
         return new Promise((resolve) => {
             const osc = audioCtx.createOscillator();
@@ -370,6 +400,7 @@
             osc.type = 'sine';
             osc.frequency.setValueAtTime(currentFreq, audioCtx.currentTime);
 
+            // フェードイン・フェードアウト
             gain.gain.setValueAtTime(0, audioCtx.currentTime);
             gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.02);
             gain.gain.setValueAtTime(0.1, audioCtx.currentTime + duration - 0.02);
@@ -384,6 +415,66 @@
         });
     }
 
+    // 正解時の効果音（ピンポン♪）
+    function playSoundCorrect() {
+        initAudio();
+        const now = audioCtx.currentTime;
+
+        // 高いミ (E5: ~659Hz) -> 高いソ# (G#5: ~830Hz)
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sine';
+        osc1.frequency.setValueAtTime(659.25, now);
+        gain1.gain.setValueAtTime(0, now);
+        gain1.gain.linearRampToValueAtTime(0.15, now + 0.02);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.4);
+
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'sine';
+        osc2.frequency.setValueAtTime(830.61, now + 0.15);
+        gain2.gain.setValueAtTime(0, now + 0.15);
+        gain2.gain.linearRampToValueAtTime(0.15, now + 0.17);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(now + 0.15);
+        osc2.stop(now + 0.7);
+    }
+
+    // 不正解時の効果音（ブブー）
+    function playSoundIncorrect() {
+        initAudio();
+        const now = audioCtx.currentTime;
+
+        // 2回の低い鋸歯状波
+        for (let i = 0; i < 2; i++) {
+            const start = now + (i * 0.18);
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(150, start);
+
+            gain.gain.setValueAtTime(0, start);
+            gain.gain.linearRampToValueAtTime(0.12, start + 0.02);
+            gain.gain.setValueAtTime(0.12, start + 0.12);
+            gain.gain.linearRampToValueAtTime(0.001, start + 0.15);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start(start);
+            osc.stop(start + 0.15);
+        }
+    }
+
     // チェック開始
     async function startTest() {
         initAudio();
@@ -394,7 +485,6 @@
         if (isTesting) return;
         isTesting = true;
 
-        // 結果表示をリセット
         const feedbackArea = document.getElementById('feedbackArea');
         feedbackArea.className = 'feedback-area';
         feedbackArea.innerText = '';
@@ -403,10 +493,12 @@
         startBtn.innerText = '再生中...';
         startBtn.disabled = true;
 
+        // 1〜5回のランダムな回数
         actualBeepCount = Math.floor(Math.random() * 5) + 1;
 
         for (let i = 0; i < actualBeepCount; i++) {
             await playBeep(0.15);
+            // 200msの間隔を確保
             await new Promise(r => setTimeout(r, 200));
         }
 
@@ -426,10 +518,12 @@
                 maxAudibleFreq = currentFreq;
             }
             feedbackArea.className = 'feedback-area correct';
-            feedbackArea.innerText = `⭕ 正解！ (${actualBeepCount}回)`;
+            feedbackArea.innerText = `⭕ 正解！`;
+            playSoundCorrect();
         } else {
             feedbackArea.className = 'feedback-area incorrect';
-            feedbackArea.innerText = `❌ 不正解！ 正しくは ${actualBeepCount}回！`;
+            feedbackArea.innerText = `❌ 不正解！正しくは ${actualBeepCount}回！`;
+            playSoundIncorrect();
         }
 
         isTesting = false;
