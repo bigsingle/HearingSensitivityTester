@@ -412,16 +412,16 @@
         });
     }
 
-    // 正解時の効果音（ミ→ソ# を1オクターブ上げ、ソ#は250ms鳴らす）
+    // 正解時の効果音（ソ# -> ミ[500ms]）
     function playSoundCorrect() {
         initAudio();
         const now = audioCtx.currentTime;
 
-        // 1音目: ミ (E6: 1318.51Hz) - 150ms
+        // 1音目: 高いソ# (G#6: 1661.22Hz) - 150ms
         const osc1 = audioCtx.createOscillator();
         const gain1 = audioCtx.createGain();
         osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(1318.51, now);
+        osc1.frequency.setValueAtTime(1661.22, now);
         gain1.gain.setValueAtTime(0, now);
         gain1.gain.linearRampToValueAtTime(0.15, now + 0.02);
         gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
@@ -431,22 +431,22 @@
         osc1.start(now);
         osc1.stop(now + 0.15);
 
-        // 2音目: ソ# (G#6: 1661.22Hz) - 250ms
+        // 2音目: 高いミ (E6: 1318.51Hz) - 500ms
         const osc2 = audioCtx.createOscillator();
         const gain2 = audioCtx.createGain();
         osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(1661.22, now + 0.15);
+        osc2.frequency.setValueAtTime(1318.51, now + 0.15);
         gain2.gain.setValueAtTime(0, now + 0.15);
         gain2.gain.linearRampToValueAtTime(0.15, now + 0.17);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.40); // 0.15s + 0.25s
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.65); // 0.15s + 0.50s
 
         osc2.connect(gain2);
         gain2.connect(audioCtx.destination);
         osc2.start(now + 0.15);
-        osc2.stop(now + 0.40);
+        osc2.stop(now + 0.65);
     }
 
-    // 不正解時の効果音（鋸歯状波2回連続、2回目は250ms）
+    // 不正解時の効果音（鋸歯状波2回連続、2回目は500ms）
     function playSoundIncorrect() {
         initAudio();
         const now = audioCtx.currentTime;
@@ -467,7 +467,7 @@
         osc1.start(now);
         osc1.stop(now + 0.15);
 
-        // 2回目: 250ms (少し間隔をあけて 0.18s 後から開始)
+        // 2回目: 500ms (0.18s 後から開始)
         const start2 = now + 0.18;
         const osc2 = audioCtx.createOscillator();
         const gain2 = audioCtx.createGain();
@@ -476,13 +476,13 @@
 
         gain2.gain.setValueAtTime(0, start2);
         gain2.gain.linearRampToValueAtTime(0.12, start2 + 0.02);
-        gain2.gain.setValueAtTime(0.12, start2 + 0.22);
-        gain2.gain.linearRampToValueAtTime(0.001, start2 + 0.25);
+        gain2.gain.setValueAtTime(0.12, start2 + 0.47);
+        gain2.gain.linearRampToValueAtTime(0.001, start2 + 0.50);
 
         osc2.connect(gain2);
         gain2.connect(audioCtx.destination);
         osc2.start(start2);
-        osc2.stop(start2 + 0.25);
+        osc2.stop(start2 + 0.50);
     }
 
     // チェック開始
