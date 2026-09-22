@@ -3,206 +3,354 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>耳の感度測定テスト</title>
+    <title>可聴周波数域チェッカ ver 1.000</title>
     <style>
-        body { font-family: 'Helvetica Neue', Arial, sans-serif; text-align: center; background-color: #f0f2f5; color: #333; padding: 20px; }
-        .container { max-width: 500px; margin: 0 auto; background: white; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        
-        .freq-setter { display: flex; justify-content: center; align-items: center; margin-bottom: 30px; gap: 5px; }
-        .digit-col { display: flex; flex-direction: column; align-items: center; }
-        .digit-val { font-size: 2.2rem; font-weight: bold; width: 45px; background: #eee; margin: 5px 0; border-radius: 5px; line-height: 50px; }
-        .arrow-btn { width: 45px; height: 40px; cursor: pointer; border: none; background: #007AFF; color: white; border-radius: 5px; font-size: 1.2rem; }
-        .arrow-btn:hover { background: #0056b3; }
-        .unit { font-size: 1.5rem; margin-left: 10px; align-self: flex-end; padding-bottom: 10px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: #f0f0e8;
+            margin: 20px;
+            display: flex;
+            justify-content: center;
+        }
 
-        #start-test { padding: 15px 40px; font-size: 1.2rem; cursor: pointer; background: #34C759; color: white; border: none; border-radius: 30px; margin-bottom: 20px; width: 100%; transition: 0.3s; }
-        #start-test:disabled { background: #ccc; cursor: not-allowed; }
-        #start-test.playing { background: #ff3b30; animation: blink 0.6s infinite; }
+        .window {
+            width: 480px;
+            background-color: #ece9d8;
+            border: 2px solid #0055ea;
+            border-radius: 5px;
+            box-shadow: 2px 2px 10px rgba(0,0,0,0.3);
+            padding: 10px;
+            box-sizing: border-box;
+        }
 
-        @keyframes blink { 0% { opacity: 1; } 50% { opacity: 0.7; } 100% { opacity: 1; } }
+        .title-bar {
+            background: linear-gradient(to right, #0058ee, #3a93ff);
+            color: white;
+            font-weight: bold;
+            padding: 4px 8px;
+            margin: -10px -10px 10px -10px;
+            border-top-left-radius: 3px;
+            border-top-right-radius: 3px;
+            font-size: 14px;
+        }
 
-        .answer-section { margin-top: 20px; opacity: 0; pointer-events: none; transition: 0.5s; }
-        .answer-section.visible { opacity: 1; pointer-events: auto; }
-        .answer-btns { display: flex; justify-content: center; gap: 10px; margin-top: 10px; }
-        .ans-btn { width: 50px; height: 50px; font-size: 1.2rem; cursor: pointer; border: 2px solid #007AFF; background: white; border-radius: 50%; color: #007AFF; }
-        .ans-btn:hover { background: #007AFF; color: white; }
+        .menu-bar {
+            font-size: 12px;
+            margin-bottom: 10px;
+            border-bottom: 1px solid #d0d0d0;
+            padding-bottom: 3px;
+        }
 
-        #result-display { font-size: 4rem; font-weight: bold; margin-top: 20px; height: 80px; }
-        #status-msg { color: #888; font-size: 0.9rem; margin-bottom: 10px; }
+        .menu-bar span {
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .panel-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        fieldset {
+            border: 1px solid #b5b5b5;
+            border-radius: 4px;
+            padding: 8px;
+            margin: 0;
+            background-color: #f4f4ec;
+        }
+
+        legend {
+            font-size: 12px;
+            color: #003399;
+            font-weight: bold;
+            padding: 0 4px;
+        }
+
+        .freq-display {
+            flex: 1;
+            text-align: center;
+        }
+
+        .freq-value {
+            font-size: 28px;
+            font-weight: bold;
+            color: #000080;
+            margin-top: 5px;
+        }
+
+        .manual-setting {
+            flex: 1.2;
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 4px;
+        }
+
+        button {
+            background-color: #f2f2f2;
+            border: 1px solid #7f9db9;
+            border-radius: 3px;
+            padding: 4px 2px;
+            font-size: 11px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            background-color: #e0e0e0;
+        }
+
+        button:active {
+            background-color: #d0d0d0;
+        }
+
+        .check-area {
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .btn-large {
+            width: 100%;
+            padding: 8px;
+            font-size: 13px;
+            margin-bottom: 8px;
+        }
+
+        .count-buttons {
+            display: flex;
+            gap: 5px;
+            justify-content: space-between;
+        }
+
+        .count-buttons button {
+            flex: 1;
+            padding: 6px 0;
+            font-size: 12px;
+        }
+
+        .results-row {
+            display: flex;
+            gap: 10px;
+            margin-top: 10px;
+        }
+
+        .result-box {
+            flex: 1;
+            text-align: center;
+        }
+
+        .result-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #000080;
+            margin-top: 5px;
+        }
+
+        .bottom-buttons {
+            display: flex;
+            justify-content: flex-end;
+            gap: 10px;
+            margin-top: 12px;
+        }
+
+        .bottom-buttons button {
+            padding: 4px 15px;
+        }
     </style>
 </head>
 <body>
 
-<div class="container">
-    <h2>耳の感度測定テスト</h2>
-    <div id="status-msg">周波数を設定して開始ボタンを押してください</div>
-    
-    <div class="freq-setter" id="freq-controls">
-        </div>
-
-    <button id="start-test">テスト音を再生 (3秒間)</button>
-
-    <div class="answer-section" id="answer-ui">
-        <p>音は何回鳴りましたか？</p>
-        <div class="answer-btns">
-            <button class="ans-btn" onclick="checkAnswer(1)">1</button>
-            <button class="ans-btn" onclick="checkAnswer(2)">2</button>
-            <button class="ans-btn" onclick="checkAnswer(3)">3</button>
-            <button class="ans-btn" onclick="checkAnswer(4)">4</button>
-            <button class="ans-btn" onclick="checkAnswer(5)">5</button>
-        </div>
+<div class="window">
+    <div class="title-bar">可聴周波数域チェッカ ver 1.000</div>
+    <div class="menu-bar">
+        <span>ファイル(F)</span>
+        <span>サウンド(S)</span>
+        <span>ヘルプ(H)</span>
     </div>
 
-    <div id="result-display"></div>
+    <!-- 上段：現在の周波数と手動設定 -->
+    <div class="panel-row">
+        <fieldset class="freq-display">
+            <legend>現在の周波数</legend>
+            <div class="freq-value" id="currentFreqText">10000 Hz</div>
+        </fieldset>
+
+        <fieldset style="flex: 1.3;">
+            <legend>周波数手動設定</legend>
+            <div class="manual-setting">
+                <button onclick="setFreq(8000)">8kHz</button>
+                <button onclick="changeFreq(1000)">+1kHz</button>
+                <button onclick="changeFreq(100)">+100Hz</button>
+                <button onclick="changeFreq(10)">+10Hz</button>
+                <button onclick="setFreq(16000)">16kHz</button>
+                <button onclick="changeFreq(-1000)">-1kHz</button>
+                <button onclick="changeFreq(-1000)">-100Hz</button>
+                <button onclick="changeFreq(-10)">-10Hz</button>
+            </div>
+        </fieldset>
+    </div>
+
+    <!-- 中段：可聴チェック -->
+    <fieldset class="check-area">
+        <legend>可聴チェック</legend>
+        <button class="btn-large" id="startBtn" onclick="startTest()">チェック開始</button>
+        
+        <fieldset style="margin-top: 5px;">
+            <legend>音の鳴った回数</legend>
+            <div class="count-buttons">
+                <button onclick="answer(1)">1</button>
+                <button onclick="answer(2)">2</button>
+                <button onclick="answer(3)">3</button>
+                <button onclick="answer(4)">4</button>
+                <button onclick="answer(5)">5</button>
+                <button style="flex: 1.8;" onclick="answer(0)">分からない！</button>
+            </div>
+        </fieldset>
+    </fieldset>
+
+    <!-- 下段：最高可聴周波数と正答率 -->
+    <div class="results-row">
+        <fieldset class="result-box">
+            <legend>最高可聴周波数</legend>
+            <div class="result-value" id="maxFreqText">--- Hz</div>
+        </fieldset>
+        <fieldset class="result-box">
+            <legend>正答率</legend>
+            <div class="result-value" id="accuracyText">0.0 %</div>
+        </fieldset>
+    </div>
+
+    <!-- 最下部ボタン -->
+    <div class="bottom-buttons">
+        <button onclick="resetAll()">初めからやり直す(C)</button>
+        <button onclick="alert('ブラウザのタブを閉じて終了してください。')">終了(X)</button>
+    </div>
 </div>
 
 <script>
     let audioCtx = null;
-    let currentTargetCount = 0;
-    let digits =; // 01000 Hz
+    let currentFreq = 10000;
+    let actualBeepCount = 0;
+    let isTesting = false;
+    
+    let totalTests = 0;
+    let correctTests = 0;
+    let maxAudibleFreq = 0;
 
-    // UIの生成を確実に行う
-    function initUI() {
-        const freqControls = document.getElementById('freq-controls');
-        freqControls.innerHTML = '';
-        digits.forEach((val, idx) => {
-            const col = document.createElement('div');
-            col.className = 'digit-col';
-            col.innerHTML = `
-                <button class="arrow-btn" onclick="changeDigit(${idx}, 1)">▲</button>
-                <div class="digit-val" id="d-${idx}">${val}</div>
-                <button class="arrow-btn" onclick="changeDigit(${idx}, -1)">▼</button>
-            `;
-            freqControls.appendChild(col);
-        });
-        const unit = document.createElement('div');
-        unit.className = 'unit';
-        unit.textContent = 'Hz';
-        freqControls.appendChild(unit);
-    }
-
-    function changeDigit(idx, delta) {
-        digits[idx] = (digits[idx] + delta + 10) % 10;
-        document.getElementById(`d-${idx}`).textContent = digits[idx];
-    }
-
-    function getFrequency() {
-        return parseInt(digits.join(''), 10);
-    }
-
-    async function initAudio() {
+    function initAudio() {
         if (!audioCtx) {
             audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         }
-        // 中断されている場合は再開させる（ブラウザ制限対策）
+    }
+
+    function updateDisplay() {
+        document.getElementById('currentFreqText').innerText = `${currentFreq} Hz`;
+        document.getElementById('maxFreqText').innerText = maxAudibleFreq > 0 ? `${maxAudibleFreq} Hz` : '--- Hz';
+        
+        const accuracy = totalTests > 0 ? ((correctTests / totalTests) * 100).toFixed(1) : '0.0';
+        document.getElementById('accuracyText').innerText = `${accuracy} %`;
+    }
+
+    function setFreq(val) {
+        currentFreq = Math.max(20, Math.min(22000, val));
+        updateDisplay();
+    }
+
+    function changeFreq(delta) {
+        setFreq(currentFreq + delta);
+    }
+
+    // ビープ音を1回再生する関数（Web Audio API）
+    function playBeep(duration = 0.15) {
+        return new Promise((resolve) => {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+
+            osc.type = 'sine';
+            osc.frequency.setValueAtTime(currentFreq, audioCtx.currentTime);
+
+            // クリックノイズ防止のためのフェードイン・フェードアウト
+            gain.gain.setValueAtTime(0, audioCtx.currentTime);
+            gain.gain.linearRampToValueAtTime(0.1, audioCtx.currentTime + 0.02);
+            gain.gain.setValueAtTime(0.1, audioCtx.currentTime + duration - 0.02);
+            gain.gain.linearRampToValueAtTime(0, audioCtx.currentTime + duration);
+
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+            osc.onended = resolve;
+        });
+    }
+
+    // ランダムな回数（1〜5回）音を鳴らす処理
+    async function startTest() {
+        initAudio();
         if (audioCtx.state === 'suspended') {
             await audioCtx.resume();
         }
+
+        if (isTesting) return;
+        isTesting = true;
+
+        const startBtn = document.getElementById('startBtn');
+        startBtn.innerText = '再生中...';
+        startBtn.disabled = true;
+
+        // 1〜5回のランダムな回数を設定
+        actualBeepCount = Math.floor(Math.random() * 5) + 1;
+
+        // 音の再生ループ
+        for (let i = 0; i < actualBeepCount; i++) {
+            await playBeep(0.15);
+            // 音同士の間隔（200ms間）
+            await new Promise(r => setTimeout(r, 200));
+        }
+
+        startBtn.innerText = '回答を選択してください';
     }
 
-    document.getElementById('start-test').onclick = async function() {
-        await initAudio();
-        const freq = getFrequency();
+    // 回答判定
+    function answer(userAnswer) {
+        if (!isTesting) return;
+
+        totalTests++;
+
+        if (userAnswer === actualBeepCount) {
+            correctTests++;
+            if (currentFreq > maxAudibleFreq) {
+                maxAudibleFreq = currentFreq;
+            }
+            alert(`正解です！（鳴った回数: ${actualBeepCount}回）`);
+        } else {
+            alert(`不正解です。（正解は ${actualBeepCount}回 でした）`);
+        }
+
+        isTesting = false;
+        const startBtn = document.getElementById('startBtn');
+        startBtn.innerText = 'チェック開始';
+        startBtn.disabled = false;
+
+        updateDisplay();
+    }
+
+    function resetAll() {
+        currentFreq = 10000;
+        actualBeepCount = 0;
+        isTesting = false;
+        totalTests = 0;
+        correctTests = 0;
+        maxAudibleFreq = 0;
         
-        if (freq < 20 || freq > 22000) {
-            alert("20Hz〜22000Hzの範囲で設定してください。");
-            return;
-        }
+        const startBtn = document.getElementById('startBtn');
+        startBtn.innerText = 'チェック開始';
+        startBtn.disabled = false;
 
-        const btn = this;
-        const ansUI = document.getElementById('answer-ui');
-        const resDisp = document.getElementById('result-display');
-
-        // 状態リセット
-        currentTargetCount = Math.floor(Math.random() * 5) + 1;
-        ansUI.classList.remove('visible');
-        resDisp.textContent = '';
-        btn.disabled = true;
-        btn.classList.add('playing');
-        btn.textContent = "再生中...";
-
-        const startTime = audioCtx.currentTime + 0.2;
-        const duration = 0.2;
-        const interval = 0.55; // 3秒以内に収まる間隔
-
-        for (let i = 0; i < currentTargetCount; i++) {
-            playTone(freq, startTime + (i * interval), duration);
-        }
-
-        // 3秒後に回答UIを表示
-        setTimeout(() => {
-            btn.classList.remove('playing');
-            btn.textContent = "テスト音を再生 (3秒間)";
-            btn.disabled = false;
-            ansUI.classList.add('visible');
-        }, 3000);
-    };
-
-    function playTone(freq, start, dur) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(freq, start);
-
-        // フェードイン・アウト（エンベロープ）
-        const fade = 0.01; 
-        gain.gain.setValueAtTime(0, start);
-        gain.gain.linearRampToValueAtTime(0.3, start + fade); 
-        gain.gain.setValueAtTime(0.3, start + dur - fade);
-        gain.gain.linearRampToValueAtTime(0, start + dur);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(start);
-        osc.stop(start + dur);
+        updateDisplay();
     }
 
-    function checkAnswer(userChoice) {
-        const display = document.getElementById('result-display');
-        if (userChoice === currentTargetCount) {
-            display.textContent = '○';
-            display.style.color = '#34C759';
-            playFeedback(true);
-        } else {
-            display.textContent = '×';
-            display.style.color = '#FF3B30';
-            playFeedback(false);
-        }
-        document.getElementById('answer-ui').classList.remove('visible');
-    }
-
-    function playFeedback(isCorrect) {
-        const now = audioCtx.currentTime;
-        if (isCorrect) {
-            // 正解音 (ピンポン)
-            playSimpleTone(659.25, now, 0.1);
-            playSimpleTone(880.00, now + 0.1, 0.3);
-        } else {
-            // 不正解音 (ブブー)
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(150, now);
-            gain.gain.setValueAtTime(0.1, now);
-            gain.gain.exponentialRampToValueAtTime(0.01, now + 0.5);
-            osc.connect(gain); gain.connect(audioCtx.destination);
-            osc.start(); osc.stop(now + 0.5);
-        }
-    }
-
-    function playSimpleTone(freq, start, dur) {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.frequency.setValueAtTime(freq, start);
-        gain.gain.setValueAtTime(0.1, start);
-        gain.gain.exponentialRampToValueAtTime(0.01, start + dur);
-        osc.connect(gain); gain.connect(audioCtx.destination);
-        osc.start(start); osc.stop(start + dur);
-    }
-
-    // ページ読み込み完了時に実行
-    window.onload = initUI;
+    // 初期表示設定
+    updateDisplay();
 </script>
 
 </body>
