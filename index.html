@@ -265,7 +265,7 @@
 </header>
 
 <div class="container">
-    <!-- メイン表示（白色背景・太字・黒色文字） -->
+    <!-- メイン表示 -->
     <div class="main-freq-box">
         <div class="main-freq-value" id="currentFreqText">100 Hz</div>
     </div>
@@ -291,7 +291,7 @@
         </div>
     </div>
 
-    <!-- チェックセクション（ラベル削除済み） -->
+    <!-- チェックセクション -->
     <div class="card">
         <button class="btn-primary" id="startBtn" onclick="startTest()">チェック開始</button>
         
@@ -327,7 +327,7 @@
 
     <!-- 最下部クレジット表記 -->
     <footer>
-        Special thanks to キコろぐさん・可聴周波数域チェッカ for the inspiration.
+        Special thanks to 【キコろぐさん・可聴周波数域チェッカ】 for the inspiration.
     </footer>
 </div>
 
@@ -341,19 +341,11 @@
     let correctTests = 0;
     let maxAudibleFreq = 0;
 
-    // プリセットボタン生成 (単位: Hz)
+    // プリセットボタン生成 (1000Hz〜20000Hzまで1000Hz刻み)
     function initPresets() {
         const container = document.getElementById('presetButtons');
         container.innerHTML = '';
-        
-        // 100Hzを追加
-        const btn100 = document.createElement('button');
-        btn100.className = 'preset-btn';
-        btn100.innerText = '100Hz';
-        btn100.onclick = () => setFreq(100);
-        container.appendChild(btn100);
 
-        // 1000Hz〜20000Hzまで1000Hz刻み
         for (let hz = 1000; hz <= 20000; hz += 1000) {
             const btn = document.createElement('button');
             btn.className = 'preset-btn';
@@ -420,64 +412,77 @@
         });
     }
 
-    // 正解時の効果音（ソ# -> ミ）
+    // 正解時の効果音（ミ→ソ# を1オクターブ上げ、ソ#は250ms鳴らす）
     function playSoundCorrect() {
         initAudio();
         const now = audioCtx.currentTime;
 
-        // 1音目: 高いソ# (G#5: ~830.61Hz)
+        // 1音目: ミ (E6: 1318.51Hz) - 150ms
         const osc1 = audioCtx.createOscillator();
         const gain1 = audioCtx.createGain();
         osc1.type = 'sine';
-        osc1.frequency.setValueAtTime(830.61, now);
+        osc1.frequency.setValueAtTime(1318.51, now);
         gain1.gain.setValueAtTime(0, now);
         gain1.gain.linearRampToValueAtTime(0.15, now + 0.02);
-        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.4);
+        gain1.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
 
         osc1.connect(gain1);
         gain1.connect(audioCtx.destination);
         osc1.start(now);
-        osc1.stop(now + 0.4);
+        osc1.stop(now + 0.15);
 
-        // 2音目: 高いミ (E5: ~659.25Hz)
+        // 2音目: ソ# (G#6: 1661.22Hz) - 250ms
         const osc2 = audioCtx.createOscillator();
         const gain2 = audioCtx.createGain();
         osc2.type = 'sine';
-        osc2.frequency.setValueAtTime(659.25, now + 0.15);
+        osc2.frequency.setValueAtTime(1661.22, now + 0.15);
         gain2.gain.setValueAtTime(0, now + 0.15);
         gain2.gain.linearRampToValueAtTime(0.15, now + 0.17);
-        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.7);
+        gain2.gain.exponentialRampToValueAtTime(0.001, now + 0.40); // 0.15s + 0.25s
 
         osc2.connect(gain2);
         gain2.connect(audioCtx.destination);
         osc2.start(now + 0.15);
-        osc2.stop(now + 0.7);
+        osc2.stop(now + 0.40);
     }
 
-    // 不正解時の効果音（ブブー）
+    // 不正解時の効果音（鋸歯状波2回連続、2回目は250ms）
     function playSoundIncorrect() {
         initAudio();
         const now = audioCtx.currentTime;
 
-        for (let i = 0; i < 2; i++) {
-            const start = now + (i * 0.18);
-            const osc = audioCtx.createOscillator();
-            const gain = audioCtx.createGain();
+        // 1回目: 150ms
+        const osc1 = audioCtx.createOscillator();
+        const gain1 = audioCtx.createGain();
+        osc1.type = 'sawtooth';
+        osc1.frequency.setValueAtTime(150, now);
 
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(150, start);
+        gain1.gain.setValueAtTime(0, now);
+        gain1.gain.linearRampToValueAtTime(0.12, now + 0.02);
+        gain1.gain.setValueAtTime(0.12, now + 0.12);
+        gain1.gain.linearRampToValueAtTime(0.001, now + 0.15);
 
-            gain.gain.setValueAtTime(0, start);
-            gain.gain.linearRampToValueAtTime(0.12, start + 0.02);
-            gain.gain.setValueAtTime(0.12, start + 0.12);
-            gain.gain.linearRampToValueAtTime(0.001, start + 0.15);
+        osc1.connect(gain1);
+        gain1.connect(audioCtx.destination);
+        osc1.start(now);
+        osc1.stop(now + 0.15);
 
-            osc.connect(gain);
-            gain.connect(audioCtx.destination);
+        // 2回目: 250ms (少し間隔をあけて 0.18s 後から開始)
+        const start2 = now + 0.18;
+        const osc2 = audioCtx.createOscillator();
+        const gain2 = audioCtx.createGain();
+        osc2.type = 'sawtooth';
+        osc2.frequency.setValueAtTime(150, start2);
 
-            osc.start(start);
-            osc.stop(start + 0.15);
-        }
+        gain2.gain.setValueAtTime(0, start2);
+        gain2.gain.linearRampToValueAtTime(0.12, start2 + 0.02);
+        gain2.gain.setValueAtTime(0.12, start2 + 0.22);
+        gain2.gain.linearRampToValueAtTime(0.001, start2 + 0.25);
+
+        osc2.connect(gain2);
+        gain2.connect(audioCtx.destination);
+        osc2.start(start2);
+        osc2.stop(start2 + 0.25);
     }
 
     // チェック開始
